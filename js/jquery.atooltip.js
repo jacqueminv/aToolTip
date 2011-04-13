@@ -3,7 +3,9 @@
 	Plugin Name:				aToolTip V 1.1
 	Plugin by: 					Ara Abcarians: http://ara-abcarians.com
 	License:					aToolTip is licensed under a Creative Commons Attribution 3.0 Unported License
-								Read more about this license at --> http://creativecommons.org/licenses/by/3.0/			
+								Read more about this license at --> http://creativecommons.org/licenses/by/3.0/
+
+    Modified by:                Valentin Jacquemin (when using "click" insert only once the markup for the Tooltip)
 */
 (function($) {
     $.fn.aToolTip = function(options) {
@@ -87,9 +89,30 @@
 					// remove already existing tooltip
 					$('.' + settings.toolTipClass).stop().fadeOut(settings.outSpeed, function(){$(this).remove();});
 					
-					obj.attr({title: ''});						  
-					$('body').append("<div class='"+ settings.toolTipClass +"'><p class='aToolTipContent'>"+ tipContent +"</p></div>");
-					$('.' + settings.toolTipClass + ' p.aToolTipContent').append("<a class='"+ settings.closeTipBtn +"' href='#' alt='close'>close</a>");
+					obj.attr({title: ''});
+
+                    //include only one tooltip in the DOM and show one at a time
+                    if ( $('.' + settings.toolTipClass).length === 0 ) {
+                        $('body').append($("<div class='" + settings.toolTipClass + "'></div>"));
+                        $('.' + settings.toolTipClass).append($("<p class='aToolTipContent'></p>").html(tipContent));
+                    } else {
+                        $('.aToolTipContent').html(tipContent);
+                    }
+
+					$('.' + settings.toolTipClass + ' .aToolTipContent').
+                        append("<a class='"+ settings.closeTipBtn +"' href='#' alt='close'>close</a>");
+
+                    // Click to close tooltip
+					$('.' + settings.closeTipBtn).click(function(){
+						$('.' + settings.toolTipClass).fadeOut(settings.outSpeed, function(){
+                            $(this).remove();
+							if ($.isFunction(settings.onHide)){
+								settings.onHide(obj);
+							}
+                            });
+						return false;
+					});
+
 					$('.' + settings.toolTipClass).css({
 						position: 'absolute',
 						display: 'none',
@@ -102,16 +125,6 @@
 							settings.onShow(obj);
 						}
 					});	
-					// Click to close tooltip
-					$('.' + settings.closeTipBtn).click(function(){
-						$('.' + settings.toolTipClass).fadeOut(settings.outSpeed, function(){
-							$(this).remove();
-							if ($.isFunction(settings.onHide)){
-								settings.onHide(obj);
-							}
-						});
-						return false;
-					});		 
 					return false;			
 			    });
 		    }
